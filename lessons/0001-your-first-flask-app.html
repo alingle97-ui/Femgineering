@@ -1,0 +1,63 @@
+<title>Lesson 1 — Your First Flask App</title>
+<link rel="stylesheet" href="../assets/style.css">
+<div class="lesson">
+  <h1>Your First Flask App</h1>
+  <p class="subtitle">Lesson 1 · Femgineering Dashboard</p>
+
+  <p class="body">Right now the dashboard is just a PRD. This lesson gets you a real, running web page — served by code you wrote — as the first brick of the actual app.</p>
+
+  <h2>What Flask is</h2>
+  <p>A "web app" is just a program that, instead of printing to your terminal, sends back a page when a browser asks for one. <strong>Flask</strong> is a small Python library that handles the browser-talking part, so you can write a plain Python function and say "run this when someone visits <code>/</code>."</p>
+  <p>You already checked out Python 3.9 and <code>pip</code> (Python's package installer) — both already on your machine, nothing to install there.</p>
+
+  <h2>Step 1 — Install Flask</h2>
+  <p>In your terminal, in the <code>Femgineering</code> folder, run:</p>
+  <pre><code>python3 -m pip install flask</code></pre>
+  <p>This downloads Flask and makes it available to import in your Python code.</p>
+
+  <h2>Step 2 — Write the app</h2>
+  <p>Create a new file called <code>app.py</code> in the <code>Femgineering</code> folder with exactly this:</p>
+  <pre><code>from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "&lt;h1&gt;Femgineering Dashboard&lt;/h1&gt;&lt;p&gt;It's alive.&lt;/p&gt;"
+
+if __name__ == "__main__":
+    app.run(debug=True)</code></pre>
+  <p>Line by line, since every piece here will show up again:</p>
+  <ul>
+    <li><code>Flask(__name__)</code> creates your app — think of it as "the thing that will answer browser requests."</li>
+    <li><code>@app.route("/")</code> is a <em>decorator</em> — it tells Flask "when someone visits the root address (<code>/</code>), run the function right below me."</li>
+    <li><code>def home():</code> is that function. Whatever it <code>return</code>s is what the browser displays.</li>
+    <li><code>debug=True</code> means Flask restarts itself automatically when you save changes to the file, and shows you readable errors in the browser instead of a blank page.</li>
+  </ul>
+
+  <h2>Step 3 — Run it</h2>
+  <pre><code>python3 app.py</code></pre>
+  <p>You should see output mentioning something like <code>Running on http://127.0.0.1:5000</code>. Open that address in your browser.</p>
+
+  <div class="win"><strong>Win:</strong> a page reading "Femgineering Dashboard — It's alive." — rendered by a server you started, from code you wrote.</div>
+
+  <p>Leave the terminal running while the app is up. <kbd>Ctrl+C</kbd> in the terminal stops it.</p>
+
+  <h2>Try it yourself</h2>
+  <p>Before moving on, without looking back at Step 2:</p>
+  <ol>
+    <li>Add a second route, <code>/about</code>, that returns a short sentence about the podcast.</li>
+    <li>Visit <code>http://127.0.0.1:5000/about</code> to confirm it works. (Debug mode means you don't need to restart the server after saving.)</li>
+  </ol>
+  <p class="body">This is deliberately unaided — figuring it out from the pattern above is what makes it stick, not just watching it work.</p>
+
+  <h2>Primary source</h2>
+  <p class="source">For more detail than this lesson covers: <a href="https://flask.palletsprojects.com/en/stable/quickstart/" target="_blank" rel="noopener">Flask Quickstart — official docs</a>. It's the same library, written for people who already know Python, so some of it will look familiar and some will look like more than you need yet — that's fine.</p>
+
+  <p class="ask-agent">Stuck, or curious why something works the way it does? Ask your agent — that's what it's there for. Nothing here is precious; if a step doesn't make sense, say so.</p>
+
+  <div class="nav">
+    <span>Lesson 1 of ?</span>
+    <span>Next: routes for Topics →</span>
+  </div>
+</div>

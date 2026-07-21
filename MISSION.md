@@ -15,6 +15,7 @@ Two goals, pursued together. First, a practical one: you need a working personal
 ## Constraints
 - A few hours per week, no fixed deadline — casual pace.
 - Rusty on fundamentals: variables/functions/loops from college Python need a light refresh, not a full re-teach. Don't assume web/frontend vocabulary (confirmed you didn't know what a "tech stack" is going in) — define terms plainly the first time they're used.
+- Always explain the *why*, not just the *what*, for every new piece of syntax as it's introduced — even lines that look small or boilerplate-y. Confirmed after Lesson 1: things like `<h1>` tags, why a route function needs a unique name, and the `if __name__ == "__main__":` idiom all needed unpacking even though they were only a few lines of code. Don't assume something is self-evident just because it's short.
 - Stack: Python (Flask) + SQLite + server-rendered HTML templates for the core app. Chosen to reuse existing (rusty) Python rather than adding a new language on top of a new framework.
 - Because of the career motivation, it's worth surfacing standard software-engineering practice (not just "make it work") where it doesn't overload the current lesson — e.g. naming things clearly, git habits — even though the PRD itself only asks for a working personal tool.
 

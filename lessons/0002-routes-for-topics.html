@@ -1,0 +1,65 @@
+<title>Lesson 2 — Routes for Topics</title>
+<link rel="stylesheet" href="../assets/style.css">
+<div class="lesson">
+  <h1>Routes for Topics</h1>
+  <p class="subtitle">Lesson 2 · Femgineering Dashboard</p>
+
+  <p class="body">Lesson 1 gave you two routes that each return one fixed string — you typed the whole page by hand. The real Topics section needs to show a *list* of topics (Menopause, Endometriosis, PCOS, however many you add), and right now you don't have a database yet — that's coming in a later lesson. This lesson bridges the gap: store your topics as plain Python data, right inside <code>app.py</code>, and write one route that turns that data into HTML automatically — instead of writing a new line of HTML for every topic by hand.</p>
+
+  <h2>Quick refresher — lists and dictionaries</h2>
+  <p>You'll be rusty on these from college, so a quick refresher before using them:</p>
+  <p>A <strong>list</strong> is an ordered collection, written with square brackets:</p>
+  <pre><code>colors = ["red", "green", "blue"]</code></pre>
+  <p>A <strong>dictionary</strong> (dict) stores named fields, written with curly braces and <code>key: value</code> pairs — like a single record with labeled fields:</p>
+  <pre><code>topic = {"name": "Menopause", "why_it_matters": "Still under-researched and often dismissed by clinicians."}</code></pre>
+  <p>You access a dict's value by its key: <code>topic["name"]</code> gives you <code>"Menopause"</code>.</p>
+  <p>Put those together and a <strong>list of dicts</strong> is a stand-in for a table of records — one dict per row, one key per column. That's exactly how we'll represent your topics before a real database exists.</p>
+
+  <h2>Step 1 — Add the topics data</h2>
+  <p>In <code>app.py</code>, above your routes, add:</p>
+  <pre><code>topics = [
+    {"name": "Menopause", "why_it_matters": "Still under-researched and often dismissed by clinicians."},
+    {"name": "Endometriosis", "why_it_matters": "Takes years to diagnose despite affecting 1 in 10 women."},
+]</code></pre>
+  <p>This mirrors the <strong>Name</strong> and <strong>Why it matters</strong> fields from the Topics section of the PRD. It's just sitting in memory as a Python variable right now — nothing is saved anywhere, so it resets every time the server restarts. That's fine for this lesson; persisting it for real is what the database lesson will solve.</p>
+
+  <h2>Step 2 — Write a route that loops over it</h2>
+  <pre><code>@app.route("/topics")
+def topics_page():
+    html = "&lt;h1&gt;Topics&lt;/h1&gt;"
+    for topic in topics:
+        html += f"&lt;h2&gt;{topic['name']}&lt;/h2&gt;&lt;p&gt;{topic['why_it_matters']}&lt;/p&gt;"
+    return html</code></pre>
+  <p>New pieces here, one at a time:</p>
+  <ul>
+    <li><code>def topics_page():</code> — the function name just needs to be unique in the file (same rule as Lesson 1). It doesn't have to match the URL <code>/topics</code>, though naming it similarly makes the code easier to read.</li>
+    <li><code>html = "&lt;h1&gt;Topics&lt;/h1&gt;"</code> — a variable holding a string we're going to build onto piece by piece, starting with a page heading.</li>
+    <li><code>for topic in topics:</code> — a <strong>for loop</strong>: run the indented lines below once for every item in the <code>topics</code> list, with <code>topic</code> holding the current dict each time through.</li>
+    <li><code>html += f"..."</code> — <code>+=</code> means "add this onto the end of <code>html</code>," so each loop pass appends another topic's HTML instead of overwriting the last one.</li>
+    <li><code>f"...{topic['name']}..."</code> — an <strong>f-string</strong> (the <code>f</code> before the quotes matters). Anything inside <code>{ }</code> gets evaluated as Python and dropped into the string — so <code>{topic['name']}</code> pulls that dict's actual name into the HTML.</li>
+    <li><code>return html</code> — sits <em>after</em> the loop (not indented inside it), so it runs once, after all topics have been appended, returning the complete page.</li>
+  </ul>
+
+  <h2>Step 3 — Run it</h2>
+  <p>If your server's still running with <code>debug=True</code>, just save and visit <code>http://127.0.0.1:5000/topics</code>. Otherwise, <code>python3 app.py</code> first.</p>
+
+  <div class="win"><strong>Win:</strong> a page listing both topics, with their headings and descriptions — generated from Python data, not typed into HTML by hand.</div>
+
+  <h2>Try it yourself</h2>
+  <p>Before moving on, without looking back at Step 1:</p>
+  <ol>
+    <li>Add a third dict to the <code>topics</code> list — pick a real topic you'd want to cover, with your own <code>name</code> and <code>why_it_matters</code>.</li>
+    <li>Reload <code>http://127.0.0.1:5000/topics</code> and confirm it shows up — without adding a single new line of HTML.</li>
+  </ol>
+  <p class="body">If it doesn't show up, check the punctuation first — a missing comma between dicts in the list is the single most common thing to trip over here.</p>
+
+  <h2>Primary source</h2>
+  <p class="source">For more on lists, dicts, and loops than this lesson covers: <a href="https://developers.google.com/edu/python" target="_blank" rel="noopener">Google's Python Class</a>. It assumes you've programmed before, which fits — this is a refresher, not a first introduction.</p>
+
+  <p class="ask-agent">Stuck, or curious why something works the way it does? Ask your agent — that's what it's there for. Nothing here is precious; if a step doesn't make sense, say so.</p>
+
+  <div class="nav">
+    <span>Lesson 2 of ?</span>
+    <span>Next: turning this into a real page with templates →</span>
+  </div>
+</div>

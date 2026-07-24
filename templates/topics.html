@@ -1,0 +1,6 @@
+<h1>Topics</h1>
+<ul>
+{% for topic in topics %}
+  <li>{{ topic.name }} — {{ topic.why_it_matters }}</li>
+{% endfor %}
+</ul>

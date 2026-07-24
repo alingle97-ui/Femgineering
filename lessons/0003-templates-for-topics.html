@@ -1,0 +1,76 @@
+<title>Lesson 3 — Templates for Topics</title>
+<link rel="stylesheet" href="../assets/style.css">
+<div class="lesson">
+  <h1>Templates for Topics</h1>
+  <p class="subtitle">Lesson 3 · Femgineering Dashboard</p>
+
+  <p class="body">Your <code>/topics</code> route works, but look at how it's built: HTML tags glued together inside Python strings with <code>+=</code>. That's fine for two topics. It gets miserable fast — imagine writing the Episodes page with statuses, guest names, and dates all tangled into one string. This lesson fixes that by introducing <strong>templates</strong>: real, separate HTML files that Flask fills in with your data. Python handles data, HTML handles layout — each in its own file, which is how real web apps are structured.</p>
+
+  <h2>What a template is</h2>
+  <p>A template is an HTML file with placeholders in it, using a syntax called <strong>Jinja</strong> (Jinja comes bundled with Flask — nothing new to install). Two kinds of placeholders you'll use today:</p>
+  <ul>
+    <li><code>{{ something }}</code> — double curly braces print a value. <code>{{ topic.name }}</code> prints that topic's name.</li>
+    <li><code>{% something %}</code> — curly-brace-percent handles logic, like loops. <code>{% for topic in topics %}</code> ... <code>{% endfor %}</code> loops over a list, same idea as the Python <code>for</code> loop from Lesson 2, just written in the template instead of in Python.</li>
+  </ul>
+  <p>Notice <code>topic.name</code> uses a dot instead of <code>topic['name']</code> — Jinja lets you use dot notation for dict keys, which reads a little cleaner in a template.</p>
+
+  <h2>Step 1 — Create the templates folder</h2>
+  <p>Flask looks for templates in one specific place: a folder literally named <code>templates</code>, sitting next to <code>app.py</code>. In your terminal, in the <code>Femgineering</code> folder:</p>
+  <pre><code>mkdir templates</code></pre>
+  <p>This name isn't optional — Flask assumes it by default, so it won't find your files if the folder is named anything else.</p>
+
+  <h2>Step 2 — Write the template</h2>
+  <p>Create a new file <code>templates/topics.html</code> with exactly this:</p>
+  <pre><code>&lt;h1&gt;Topics&lt;/h1&gt;
+{% for topic in topics %}
+  &lt;h2&gt;{{ topic.name }}&lt;/h2&gt;
+  &lt;p&gt;{{ topic.why_it_matters }}&lt;/p&gt;
+{% endfor %}</code></pre>
+  <p>This is just HTML with two Jinja tags dropped in — no Python here at all. Compare it to the Lesson 2 route: same loop, same two fields, but now it reads like a page instead of a string being assembled piece by piece.</p>
+
+  <h2>Step 3 — Point the route at it</h2>
+  <p>Back in <code>app.py</code>, update the top import and the <code>/topics</code> route:</p>
+  <pre><code>from flask import Flask, render_template
+
+# ...keep your existing topics list and other routes...
+
+@app.route("/topics")
+def topics_page():
+    return render_template("topics.html", topics=topics)</code></pre>
+  <p>New pieces:</p>
+  <ul>
+    <li><code>render_template</code> — a Flask function that finds a file in your <code>templates</code> folder, fills in its Jinja placeholders, and returns the finished HTML. You have to import it alongside <code>Flask</code>, since it's not there by default.</li>
+    <li><code>render_template("topics.html", topics=topics)</code> — the first argument is the filename to render. Everything after it is <code>name=value</code> pairs that become available inside the template — <code>topics=topics</code> makes your Python <code>topics</code> list accessible inside <code>topics.html</code> under the name <code>topics</code>. The name on the left is what the template sees; it doesn't have to match the Python variable name on the right, though keeping them the same (like here) is the least confusing.</li>
+    <li>Your whole route is now one line, because all the HTML-building moved into the template file.</li>
+  </ul>
+
+  <h2>Step 4 — Run it</h2>
+  <p>Restart if needed (<code>python3 app.py</code>), then visit <code>http://127.0.0.1:5000/topics</code> — it should look identical to Lesson 2's page. That's the point: same result, much cleaner code behind it.</p>
+
+  <div class="win"><strong>Win:</strong> <code>/topics</code> renders from a real template file instead of a hand-built string — and your route function shrank to one line.</div>
+
+  <h2>Why bother, if the output looks the same?</h2>
+  <p>Two real reasons, not just tidiness:</p>
+  <ul>
+    <li><strong>It scales.</strong> Once a page needs more than a couple of fields (Episodes will have title, status, guests, dates), a Python string gets unreadable fast. A template stays readable no matter how much HTML it has.</li>
+    <li><strong>It's safer by default.</strong> Jinja automatically escapes special characters in your data — so if a topic name ever contained something like <code>&lt;script&gt;</code>, Jinja shows it as harmless text instead of letting it run as HTML. Building strings by hand with <code>+=</code> doesn't protect you from that automatically.</li>
+  </ul>
+
+  <h2>Try it yourself</h2>
+  <p>Before moving on, without looking back at Step 2:</p>
+  <ol>
+    <li>Edit <code>templates/topics.html</code> so each topic's name and "why it matters" are shown inside a bulleted list item (<code>&lt;li&gt;</code>) instead of an <code>&lt;h2&gt;</code>/<code>&lt;p&gt;</code> pair — wrap the whole loop in <code>&lt;ul&gt;</code>...<code>&lt;/ul&gt;</code>.</li>
+    <li>Reload <code>/topics</code> and confirm it now renders as a bulleted list.</li>
+  </ol>
+  <p class="body">You're only touching the template file for this — <code>app.py</code> doesn't need to change at all. That split is exactly what templates are for.</p>
+
+  <h2>Primary source</h2>
+  <p class="source">For more on templates than this lesson covers: <a href="https://flask.palletsprojects.com/en/stable/tutorial/templates/" target="_blank" rel="noopener">Flask Tutorial — Templates</a>, part of the official "Flaskr" walkthrough. It goes further into template inheritance (one layout shared across pages), which is worth knowing exists but isn't needed yet.</p>
+
+  <p class="ask-agent">Stuck, or curious why something works the way it does? Ask your agent — that's what it's there for. Nothing here is precious; if a step doesn't make sense, say so.</p>
+
+  <div class="nav">
+    <span>Lesson 3 of ?</span>
+    <span>Next: saving topics for real with a database →</span>
+  </div>
+</div>

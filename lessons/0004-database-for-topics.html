@@ -1,0 +1,104 @@
+<title>Lesson 4 — A Real Database for Topics</title>
+<link rel="stylesheet" href="../assets/style.css">
+<div class="lesson">
+  <h1>A Real Database for Topics</h1>
+  <p class="subtitle">Lesson 4 · Femgineering Dashboard</p>
+
+  <p class="body">Back in Lesson 2, your <code>topics</code> list was a warning waiting to happen: it lives only in your computer's memory while the server is running. Stop the server, and it's gone — you'd have to retype your topics into the code every single time. That's fine for a lesson, useless for a real tool. This lesson replaces that list with a <strong>SQLite database</strong> — an actual file on disk that remembers your topics permanently, restart or not.</p>
+
+  <h2>What SQLite is</h2>
+  <p>A database is just a place to store data permanently and query it back out. There are heavier database systems (Postgres, MySQL) that run as a separate always-on program you'd have to install and start up. <strong>SQLite</strong> is different — the whole database is a single file sitting in your project folder, and Python already knows how to talk to it via a built-in module called <code>sqlite3</code>. No <code>pip install</code> needed this time, unlike Flask — it comes with Python itself.</p>
+  <p>To talk to it, you write <strong>SQL</strong> (Structured Query Language) — a small language of its own, separate from Python, built specifically for describing tables and asking questions of them. You'll only need three SQL commands today: <code>CREATE TABLE</code>, <code>INSERT INTO</code>, and <code>SELECT</code>.</p>
+
+  <h2>Step 1 — Write a setup script</h2>
+  <p>Create a new file, <code>init_db.py</code>, in the <code>Femgineering</code> folder (next to <code>app.py</code>, not inside <code>templates</code>):</p>
+  <pre><code>import sqlite3
+
+connection = sqlite3.connect("femgineering.db")
+
+connection.execute("""
+    CREATE TABLE IF NOT EXISTS topics (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        why_it_matters TEXT NOT NULL
+    )
+""")
+
+connection.execute("DELETE FROM topics")
+
+connection.execute(
+    "INSERT INTO topics (name, why_it_matters) VALUES (?, ?)",
+    ("Menopause", "Still under-researched and often dismissed by clinicians."),
+)
+connection.execute(
+    "INSERT INTO topics (name, why_it_matters) VALUES (?, ?)",
+    ("Endometriosis", "Takes years to diagnose despite affecting 1 in 10 women."),
+)
+
+connection.commit()
+connection.close()
+
+print("Database ready.")</code></pre>
+  <p>New pieces, one at a time:</p>
+  <ul>
+    <li><code>sqlite3.connect("femgineering.db")</code> — opens that file if it exists, or creates it if it doesn't. This one call is basically "give me a handle to my database."</li>
+    <li><code>connection.execute("""...""")</code> — runs a string of SQL against the database. The triple-quotes (<code>"""</code>) let the string span multiple lines, which is just for readability here.</li>
+    <li><code>CREATE TABLE IF NOT EXISTS topics (...)</code> — defines a table named <code>topics</code>, with three columns: <code>id</code>, <code>name</code>, <code>why_it_matters</code>. This is the persistent version of the shape your list-of-dicts already had — <code>name</code> and <code>why_it_matters</code> are the same fields from Lesson 2; <code>id</code> is new.</li>
+    <li><code>id INTEGER PRIMARY KEY AUTOINCREMENT</code> — gives every row a unique number automatically (1, 2, 3, ...), so you always have a reliable way to refer to "that one specific topic" later, even if two topics end up with the same name.</li>
+    <li><code>TEXT NOT NULL</code> — this column holds text, and it's required (a row can't be saved without it).</li>
+    <li><code>IF NOT EXISTS</code> — makes it safe to run this script more than once; it won't complain that the table is already there.</li>
+    <li><code>DELETE FROM topics</code> — empties the table before reinserting, so re-running this script doesn't leave you with duplicate topics every time.</li>
+    <li><code>INSERT INTO topics (name, why_it_matters) VALUES (?, ?)</code>, with <code>("Menopause", "...")</code> passed as a second argument — the <code>?</code> placeholders get safely filled in with those values. Always do it this way (never by building the SQL string yourself with <code>+</code> or an f-string) — placeholders protect you from a real security problem called <strong>SQL injection</strong>, where someone's typed-in text could otherwise be interpreted as a database command instead of plain data.</li>
+    <li><code>connection.commit()</code> — SQLite doesn't permanently save your changes until you explicitly commit them. Forgetting this is a classic "why didn't my data save" bug.</li>
+    <li><code>connection.close()</code> — releases the file so nothing's left dangling open.</li>
+  </ul>
+
+  <h2>Step 2 — Run it once</h2>
+  <pre><code>python3 init_db.py</code></pre>
+  <p>You should see <code>Database ready.</code> print out, and a new file, <code>femgineering.db</code>, appear in your folder. Unlike <code>app.py</code>, this script isn't something that runs continuously — it's a one-time (or "run it whenever I want to reset my data") setup step.</p>
+
+  <h2>Step 3 — Read from the database instead of the list</h2>
+  <p>In <code>app.py</code>, remove the hardcoded <code>topics = [...]</code> list from Lesson 2 entirely, add <code>import sqlite3</code> at the top, and rewrite the route:</p>
+  <pre><code>import sqlite3
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route("/topics")
+def topics_page():
+    connection = sqlite3.connect("femgineering.db")
+    connection.row_factory = sqlite3.Row
+    topics = connection.execute("SELECT * FROM topics").fetchall()
+    connection.close()
+    return render_template("topics.html", topics=topics)</code></pre>
+  <p>New pieces:</p>
+  <ul>
+    <li>The connection now opens <em>inside</em> the route, not once at the top of the file. This is standard practice: a web app can get many requests at once, so each request grabs its own fresh connection and closes it when done, rather than sharing one connection for the whole app's lifetime.</li>
+    <li><code>connection.row_factory = sqlite3.Row</code> — without this line, each row comes back as a plain tuple like <code>(1, "Menopause", "...")</code>, and you'd have to remember that position 1 means "name." This line makes each row behave like a dict instead, so <code>topic.name</code> and <code>topic.why_it_matters</code> — the exact same dot notation your template already uses — keep working with zero changes to <code>topics.html</code>.</li>
+    <li><code>SELECT * FROM topics</code> — the SQL question "give me every column, for every row, in the topics table." <code>*</code> means "all columns."</li>
+    <li><code>.fetchall()</code> — actually pulls the matching rows back as a list, which is what makes <code>topics</code> here loop-able in the template exactly like the hardcoded list from Lesson 2 did.</li>
+  </ul>
+
+  <h2>Step 4 — Run it and prove it persists</h2>
+  <p>Restart your server (<code>python3 app.py</code>) and visit <code>http://127.0.0.1:5000/topics</code> — same page as before. Now stop the server entirely (<code>Ctrl+C</code>), and start it again. Reload the page.</p>
+
+  <div class="win"><strong>Win:</strong> your topics are still there after a full restart — because they now live in <code>femgineering.db</code> on disk, not in a Python variable that resets every time the program starts.</div>
+
+  <h2>Try it yourself</h2>
+  <p>Before moving on, without looking back at Step 1:</p>
+  <ol>
+    <li>Add one more <code>INSERT INTO topics (...)</code> statement to <code>init_db.py</code>, for a real topic of your choosing.</li>
+    <li>Run <code>python3 init_db.py</code> again, then reload <code>/topics</code> and confirm your new topic shows up.</li>
+  </ol>
+  <p class="body">Notice you're editing <code>init_db.py</code>, not <code>app.py</code> or the template — the route and the template don't care how many topics exist or where they came from; they just display whatever the database hands back.</p>
+
+  <h2>Primary source</h2>
+  <p class="source">For more on SQLite from Python than this lesson covers: <a href="https://docs.python.org/3/library/sqlite3.html" target="_blank" rel="noopener">sqlite3 — Python standard library docs</a>. If you want to see this same database/route pattern used in a full app, the <a href="https://flask.palletsprojects.com/en/stable/tutorial/database/" target="_blank" rel="noopener">Flask Tutorial — Database</a> page covers it too, though it introduces a couple of extra conventions (a schema file, a CLI command) that we're skipping for now to keep this lesson to one new concept.</p>
+
+  <p class="ask-agent">Stuck, or curious why something works the way it does? Ask your agent — that's what it's there for. Nothing here is precious; if a step doesn't make sense, say so.</p>
+
+  <div class="nav">
+    <span>Lesson 4 of ?</span>
+    <span>Next: adding a topic through the browser, with a form →</span>
+  </div>
+</div>
